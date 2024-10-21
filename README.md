@@ -39,12 +39,12 @@
     - 召回率
     - F1
 - 模型优化
-  - 模型调优
+  - 模型超参数
     - 网络类型：AlexNet、ResNet、LSTM、GRU、Transformer
     - 网络大小：层数、神经元个数
     - 正则化：L1、L2、Dropout
     - 激活函数：ReLU、Sigmoid、Tanh
-  - 训练调优
+  - 算法超参数
     - batch_size：根据拟合程度调整
     - epochs：根据拟合程度调整
     - 学习率：根据收敛程度调整

@@ -20,7 +20,7 @@ class SentimentAnalysisModel(torch.nn.Module):
 
     """
 
-    def __init__(self, input_size, sequence_length, hidden_size, num_layers, output_size):
+    def __init__(self, input_size, sequence_length=100, hidden_size=1024, num_layers=1, output_size=6):
         super().__init__()
         self.input_size = input_size
         self.sequence_length = sequence_length
