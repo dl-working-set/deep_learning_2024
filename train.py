@@ -14,8 +14,7 @@ import dataset
 
 model = model.SentimentAnalysisModel(sequence_length=config.SEQUENCE_LENGTH, input_size=config.WORD2VEC_VECTOR_SIZE,
                                      hidden_size=config.MODEL_HIDDEN_SIZE, num_layers=1, output_size=6,
-                                     dropout=config.MODEL_DROPOUT).to(
-    config.DEVICE)
+                                     dropout_probs=config.MODEL_DROPOUT_PROBS).to(config.DEVICE)
 
 train_loader, validation_loader, test_loader = (
     dataset.SentimentAnalysisDataset(stopwords_path=config.STOPWORDS_PATH,
@@ -45,6 +44,8 @@ for epoch in range(1, config.TRAIN_EPOCHS + 1):
           'validation_macro_precision[{:f}]'.format(validation_macro_precision),
           'validation_macro_recall[{:f}]'.format(validation_macro_recall),
           'validation_macro_f1[{:f}]'.format(validation_macro_f1),
+          'optimizer_lr[{:.2e}]'.format(optimizer.param_groups[0]['lr']),
           time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
+
 # 3. 模型保存
 model.save(filename=config.MODEL_PTH_FILENAME)

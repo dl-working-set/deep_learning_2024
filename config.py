@@ -3,9 +3,9 @@ import torch
 DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
 # 模型参数
-MODEL_TYPE = "LSTM"  # TODO 模型类型
+MODEL_TYPE = "GRU"  # TODO 模型类型
 MODEL_HIDDEN_SIZE = 512  # 模型隐藏层大小
-MODEL_DROPOUT = 0.2  # 模型Dropout参数，取值 (0, 1)
+MODEL_DROPOUT_PROBS = 0.2  # 模型Dropout比例，取值 (0, 1)
 MODEL_ACTIVATION = "ReLU"  # TODO 模型激活函数
 
 # 训练参数
@@ -23,4 +23,4 @@ STOPWORDS_PATH = ["stopwords/hit_stopwords.txt", "stopwords/special_characters_s
 TRAIN_DATA_PATH = "file/train.ndjson"  # 训练集路径
 VALIDATION_DATA_PATH = "file/validation.ndjson"  # 验证集路径
 TEST_DATA_PATH = "file/test.ndjson"  # 测试集路径
-MODEL_PTH_FILENAME = f"pt/sentiment_analysis_{TRAIN_EPOCHS}_{TRAIN_LR}.pt"  # 模型保存路径
+MODEL_PTH_FILENAME = f"pt/sentiment_analysis_{MODEL_TYPE}_{MODEL_HIDDEN_SIZE}_{MODEL_DROPOUT_PROBS}_{MODEL_ACTIVATION}_{SEQUENCE_LENGTH}_{WORD2VEC_VECTOR_SIZE}_{WORD2VEC_EPOCHS}_{WORD2VEC_MIN_COUNT}_{TRAIN_BATCH_SIZE}_{TRAIN_EPOCHS}_{TRAIN_LR}_{TRAIN_LR_SCHEDULER_FACTOR}.pt"  # 模型保存路径

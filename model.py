@@ -20,16 +20,18 @@ class SentimentAnalysisModel(torch.nn.Module):
 
     """
 
-    def __init__(self, sequence_length=100, input_size=100, hidden_size=1024, num_layers=1, output_size=6, dropout=0.4):
+    def __init__(self, sequence_length=100, input_size=100, hidden_size=1024, num_layers=1, output_size=6,
+                 dropout_probs=0.4):
         super().__init__()
         self.sequence_length = sequence_length
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.output_size = output_size
+        self.dropout_probs = dropout_probs
         self.h0 = torch.zeros(self.num_layers, self.sequence_length, self.hidden_size)
         self.gru = torch.nn.GRU(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers)
-        self.dropout = torch.nn.Dropout(dropout)
+        self.dropout = torch.nn.Dropout(dropout_probs)
         self.out_linear = torch.nn.Sequential(
             torch.nn.Linear(sequence_length * hidden_size, hidden_size),
             torch.nn.ReLU(),
@@ -59,6 +61,7 @@ class SentimentAnalysisModel(torch.nn.Module):
             'hidden_size': self.hidden_size,
             'num_layers': self.num_layers,
             'output_size': self.output_size,
+            'dropout_probs': self.dropout_probs,
             'h0': self.h0,
             'gru': self.gru,
             'dropout': self.dropout,
@@ -69,15 +72,17 @@ class SentimentAnalysisModel(torch.nn.Module):
     @classmethod
     def load(self, filename):
         checkpoint = torch.load(filename)
-        model = self()
-        model.sequence_length = checkpoint['sequence_length']
-        model.input_size = checkpoint['input_size']
-        model.hidden_size = checkpoint['hidden_size']
-        model.num_layers = checkpoint['num_layers']
-        model.output_size = checkpoint['output_size']
+        sequence_length = checkpoint['sequence_length']
+        input_size = checkpoint['input_size']
+        hidden_size = checkpoint['hidden_size']
+        num_layers = checkpoint['num_layers']
+        output_size = checkpoint['output_size']
+        dropout_probs = checkpoint['dropout_probs']
+        model = self(sequence_length, input_size, hidden_size, num_layers, output_size, dropout_probs)
         model.h0 = checkpoint['h0']
         model.gru = checkpoint['gru']
         model.dropout = checkpoint['dropout']
         model.out_linear = checkpoint['out_linear']
         model.load_state_dict(checkpoint['model_state_dict'])
+        model.eval()
         return model

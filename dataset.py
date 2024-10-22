@@ -22,8 +22,7 @@ from matplotlib import pyplot as plt
 
 class SentimentAnalysisDataset:
     def __init__(self, stopwords_path=[], train_data_path="", validation_data_path="", test_data_path="",
-                 sequence_length=100, word2vec_vector_size=100, word2vec_epochs=10, word2vec_min_count=2,
-                 ):
+                 sequence_length=100, word2vec_vector_size=100, word2vec_epochs=10, word2vec_min_count=2, ):
         assert train_data_path != "" and train_data_path is not None
         assert validation_data_path != "" and validation_data_path is not None
         assert test_data_path != "" and test_data_path is not None
