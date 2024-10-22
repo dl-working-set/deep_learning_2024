@@ -20,14 +20,13 @@ class SentimentAnalysisModel(torch.nn.Module):
 
     """
 
-    def __init__(self, input_size, sequence_length=100, hidden_size=1024, num_layers=1, output_size=6, dropout=0.4):
+    def __init__(self, sequence_length=100, input_size=100, hidden_size=1024, num_layers=1, output_size=6, dropout=0.4):
         super().__init__()
-        self.input_size = input_size
         self.sequence_length = sequence_length
+        self.input_size = input_size
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.output_size = output_size
-        self.dropout = dropout
         self.h0 = torch.zeros(self.num_layers, self.sequence_length, self.hidden_size)
         self.gru = torch.nn.GRU(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers)
         self.dropout = torch.nn.Dropout(dropout)
@@ -43,8 +42,7 @@ class SentimentAnalysisModel(torch.nn.Module):
 
     def forward(self, x):
         out, hn = self.gru(x, self.h0)
-        if 0 < self.dropout < 1:
-            out = self.dropout(out)
+        out = self.dropout(out)
         return torch.stack([self.out_linear(out[i].view(-1)) for i in range(out.shape[0])]), hn
 
     def to(self, device):
@@ -56,12 +54,14 @@ class SentimentAnalysisModel(torch.nn.Module):
 
     def save(self, filename):
         torch.save({
-            'input_size': self.input_size,
             'sequence_length': self.sequence_length,
+            'input_size': self.input_size,
             'hidden_size': self.hidden_size,
-            'dropout': self.dropout,
-            'gru': self.gru,
+            'num_layers': self.num_layers,
+            'output_size': self.output_size,
             'h0': self.h0,
+            'gru': self.gru,
+            'dropout': self.dropout,
             'out_linear': self.out_linear,
             'model_state_dict': self.state_dict(),
         }, filename)
@@ -70,12 +70,14 @@ class SentimentAnalysisModel(torch.nn.Module):
     def load(self, filename):
         checkpoint = torch.load(filename)
         model = self()
-        model.input_size = checkpoint['input_size']
         model.sequence_length = checkpoint['sequence_length']
+        model.input_size = checkpoint['input_size']
         model.hidden_size = checkpoint['hidden_size']
-        model.dropout = checkpoint['dropout']
-        model.gru = checkpoint['gru']
+        model.num_layers = checkpoint['num_layers']
+        model.output_size = checkpoint['output_size']
         model.h0 = checkpoint['h0']
+        model.gru = checkpoint['gru']
+        model.dropout = checkpoint['dropout']
         model.out_linear = checkpoint['out_linear']
         model.load_state_dict(checkpoint['model_state_dict'])
         return model
