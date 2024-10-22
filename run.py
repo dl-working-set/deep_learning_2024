@@ -6,14 +6,13 @@ import torch
 from sklearn.metrics import precision_score, recall_score, f1_score, classification_report
 
 
-def train(model, train_loader, loss_fn, optimizer, lr_scheduler, device):
+def train(model, train_loader, loss_fn, optimizer, device):
     """训练函数
 
     :param model:训练模型
     :param train_loader:训练集
     :param loss_fn:损失函数
     :param optimizer:优化器
-    :param lr_scheduler:学习率更新策略
     :param device: 设备
     :return:平均损失
     """
@@ -27,7 +26,6 @@ def train(model, train_loader, loss_fn, optimizer, lr_scheduler, device):
         loss.backward()
         optimizer.step()
         running_loss += loss.item()
-    lr_scheduler.step()
     return running_loss / len(train_loader)
 
 
