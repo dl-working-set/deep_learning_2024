@@ -13,9 +13,10 @@ import model
 import run
 import word_embedding
 
-model = model.SentimentAnalysisModel(sequence_length=config.SEQUENCE_LENGTH, input_size=config.WORD2VEC_VECTOR_SIZE,
-                                     hidden_size=config.MODEL_HIDDEN_SIZE, num_layers=1, output_size=6,
-                                     dropout_probs=config.MODEL_DROPOUT_PROBS).to(config.DEVICE)
+model = model.SentimentAnalysisModel(model_type=config.MODEL_TYPE, sequence_length=config.SEQUENCE_LENGTH,
+                                     input_size=config.WORD2VEC_VECTOR_SIZE, hidden_size=config.MODEL_HIDDEN_SIZE,
+                                     num_layers=1, output_size=6, dropout_probs=config.MODEL_DROPOUT_PROBS).to(
+    config.DEVICE)
 
 train_contents, _ = dataset.load_contents_labels(config.TRAIN_DATA_PATH)
 stopwords = dataset.load_stopwords(config.STOPWORDS_PATH)

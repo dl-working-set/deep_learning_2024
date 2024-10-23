@@ -20,7 +20,7 @@ def train(model, train_loader, loss_fn, optimizer, device):
     running_loss = 0.0
     for data, targets in train_loader:
         data, targets = data.to(device), targets.to(device)
-        output, _ = model(data)
+        output = model(data)
         loss = loss_fn(output, targets)
         optimizer.zero_grad()
         loss.backward()
@@ -46,7 +46,7 @@ def test(model, test_loader, loss_fn, device):
     with torch.no_grad():
         for data, targets in test_loader:
             data, targets = data.to(device), targets.to(device)
-            output, _ = model(data)
+            output = model(data)
             loss = loss_fn(output, targets)
             running_loss += loss.item()
 

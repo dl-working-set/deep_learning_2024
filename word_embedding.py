@@ -69,8 +69,8 @@ class WordEmbedding(torch.nn.Module):
     def save(self, filename):
         torch.save({
             'word2vec_vector_size': self.word2vec_vector_size,
-            'stopwords ': self.stopwords,
-            'word2vec ': self.word2vec,
+            'stopwords': self.stopwords,
+            'word2vec': self.word2vec,
             'model_state_dict': self.state_dict(),
         }, filename)
 

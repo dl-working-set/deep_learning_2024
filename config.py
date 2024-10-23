@@ -3,7 +3,7 @@ import torch
 DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
 # 模型参数
-MODEL_TYPE = "GRU"  # TODO 模型类型
+MODEL_TYPE = "GRU"  # 模型类型：GRU、LSTM、*
 MODEL_HIDDEN_SIZE = 512  # 模型隐藏层大小
 MODEL_DROPOUT_PROBS = 0.2  # 模型Dropout比例，取值 (0, 1)
 MODEL_ACTIVATION = "ReLU"  # TODO 模型激活函数

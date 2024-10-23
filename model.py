@@ -20,17 +20,32 @@ class SentimentAnalysisModel(torch.nn.Module):
 
     """
 
-    def __init__(self, sequence_length=100, input_size=100, hidden_size=1024, num_layers=1, output_size=6,
+    def __init__(self, model_type=None, sequence_length=100, input_size=100, hidden_size=1024, num_layers=1,
+                 output_size=6,
                  dropout_probs=0.4):
         super().__init__()
+        if model_type is None:
+            return
+
+        self.model_type = model_type
         self.sequence_length = sequence_length
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.output_size = output_size
         self.dropout_probs = dropout_probs
-        self.h0 = torch.zeros(self.num_layers, self.sequence_length, self.hidden_size)
-        self.gru = torch.nn.GRU(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers)
+
+        # 模型类型：GRU、LSTM、...
+        if self.model_type == 'GRU':
+            self.h0 = torch.zeros(self.num_layers, self.sequence_length, self.hidden_size)
+            self.gru = torch.nn.GRU(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers)
+        elif self.model_type == 'LSTM':
+            self.h0 = torch.zeros(self.num_layers, self.sequence_length, self.hidden_size)
+            self.c0 = torch.zeros(self.num_layers, self.sequence_length, self.hidden_size)
+            self.lstm = torch.nn.LSTM(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers)
+        elif self.model_type == '*':
+            pass
+
         self.dropout = torch.nn.Dropout(dropout_probs)
         self.out_linear = torch.nn.Sequential(
             torch.nn.Linear(sequence_length * hidden_size, hidden_size),
@@ -43,19 +58,33 @@ class SentimentAnalysisModel(torch.nn.Module):
                 torch.nn.init.xavier_uniform_(param)
 
     def forward(self, x):
-        out, hn = self.gru(x, self.h0)
+        if self.model_type == 'GRU':
+            out, hn = self.gru(x, self.h0)
+        elif self.model_type == 'LSTM':
+            out, (hn, cn) = self.lstm(x, (self.h0, self.c0))
+        elif self.model_type == '*':
+            pass
         out = self.dropout(out)
-        return torch.stack([self.out_linear(out[i].view(-1)) for i in range(out.shape[0])]), hn
+        return torch.stack([self.out_linear(out[i].view(-1)) for i in range(out.shape[0])])
 
     def to(self, device):
         super().to(device)
-        self.gru = self.gru.to(device)
-        self.h0 = self.h0.to(device)
+        if self.model_type == 'GRU':
+            self.h0 = self.h0.to(device)
+            self.gru = self.gru.to(device)
+        elif self.model_type == 'LSTM':
+            self.c0 = self.c0.to(device)
+            self.h0 = self.h0.to(device)
+            self.lstm = self.lstm.to(device)
+        elif self.model_type == '*':
+            pass
+
         self.out_linear = self.out_linear.to(device)
         return self
 
     def save(self, filename):
         torch.save({
+            'model_type': self.model_type,
             'sequence_length': self.sequence_length,
             'input_size': self.input_size,
             'hidden_size': self.hidden_size,
@@ -72,13 +101,16 @@ class SentimentAnalysisModel(torch.nn.Module):
     @classmethod
     def load(self, filename):
         checkpoint = torch.load(filename)
+        model_type = checkpoint['model_type']
         sequence_length = checkpoint['sequence_length']
         input_size = checkpoint['input_size']
         hidden_size = checkpoint['hidden_size']
         num_layers = checkpoint['num_layers']
         output_size = checkpoint['output_size']
         dropout_probs = checkpoint['dropout_probs']
-        model = self(sequence_length, input_size, hidden_size, num_layers, output_size, dropout_probs)
+        model = self(model_type=model_type, sequence_length=sequence_length, input_size=input_size,
+                     hidden_size=hidden_size, num_layers=num_layers, output_size=output_size,
+                     dropout_probs=dropout_probs)
         model.h0 = checkpoint['h0']
         model.gru = checkpoint['gru']
         model.dropout = checkpoint['dropout']
