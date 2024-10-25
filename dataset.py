@@ -9,6 +9,9 @@
 import collections
 import json
 import logging
+import re
+
+import jieba
 import numpy
 import torch
 from matplotlib import pyplot as plt
@@ -30,7 +33,7 @@ class SentimentAnalysisDataset:
         sentences_vecs_truncated = [sentence_vec[:sequence_length] for sentence_vec in sentences_vecs]
 
         #   3.2 token to vec：转为词向量，padding
-        self.vecs = [vec_padding(sentences_vec, sequence_length, word_embedding.word2vec_vector_size) for
+        self.vecs = [word_embedding.vec_padding(sentences_vec, sequence_length) for
                      sentences_vec in sentences_vecs_truncated]
 
         #   3.3 label to
@@ -91,11 +94,33 @@ def load_contents_labels(filename):
     return contents, emotions
 
 
-def vec_padding(vec, sequence_length, word2vec_vector_size):
-    if sequence_length > len(vec):
-        # 填充部分使用0值
-        vec += [numpy.zeros(word2vec_vector_size)] * (sequence_length - len(vec))
-    return vec
+def tokenization(sentences, stopwords):
+    tokens = []
+    for sentence in sentences:
+        try:
+            # 1. 移除无效内容：超链接、不可识别的表情等
+            content = clean_redundant(sentence.strip())
+            # 2. 分词 [jieba]
+            seg_list = jieba.cut(content, cut_all=False)
+            # 3. 去除停用词
+            token = []
+            for seg in seg_list:
+                # 去除停用词
+                if seg not in stopwords:
+                    token.append(seg)
+            # if len(token) > 0:
+            #     tokens.append(token)
+            tokens.append(token)
+        except Exception as e:
+            logging.error(f'sentences preprocessing error - {e}')
+    return tokens
+
+
+def clean_redundant(content):
+    # TODO 去除评论中无效数据
+    content = re.sub(' ', '', content)  # 清除空内容
+    content = re.sub('【.*?】', '', content)
+    return content
 
 
 def tokens_pie(title, tokens):
@@ -107,15 +132,19 @@ def tokens_pie(title, tokens):
     """
     token_len = [len(token) for token in tokens]
     token_len_counter = collections.Counter(token_len)
-    token_len_sorted = sorted(token_len_counter.items(), key=lambda x: x[1], reverse=True)
+    token_len_sorted = sorted(token_len_counter.items(), key=lambda x: x[0])
     token_len, counts = zip(*token_len_sorted)
+    sum = 0
+    for i in range(len(token_len)):
+        sum += counts[i]
+        print(f'token长度{token_len[i]} 占比{sum / len(tokens):.4f}%')
     plt.bar(x=token_len, height=counts)
     plt.title(title)
     plt.xlim(0, int(max(token_len) * 0.15))
     plt.show()
 
 
-def labels_pie(title, labels, emotion2label):
+def labels_pie(title, labels):
     """
     打印标签分布饼图
     :param title:
@@ -126,10 +155,9 @@ def labels_pie(title, labels, emotion2label):
     labels_names = []
     labels_values = []
     for key, value in labels_count.items():
-        for emotion, label in emotion2label.items():
-            if key == label:
-                labels_names.append(emotion)
-                labels_values.append(value)
+        if key in emotion2label:
+            labels_names.append(emotion2label[key])  # plt不支持中文，使用label
+            labels_values.append(value)
     plt.pie(labels_values, labels=labels_names, autopct='%2.2f%%', startangle=90)
     plt.title(title)
     plt.axis('equal')

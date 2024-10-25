@@ -30,10 +30,9 @@ train_loader = dataset.SentimentAnalysisDataset(data_path=config.TRAIN_DATA_PATH
                                                 sequence_length=config.SEQUENCE_LENGTH, ).construct_dataloader(
     batch_size=config.TRAIN_BATCH_SIZE)
 
-validation_loader = dataset.SentimentAnalysisDataset(data_path=config.VALIDATION_DATA_PATH,
+validation_dataset = dataset.SentimentAnalysisDataset(data_path=config.VALIDATION_DATA_PATH,
                                                      word_embedding=word_embedding,
-                                                     sequence_length=config.SEQUENCE_LENGTH, ).construct_dataloader(
-    batch_size=config.TRAIN_BATCH_SIZE)
+                                                     sequence_length=config.SEQUENCE_LENGTH, ).dataset
 
 loss_fn = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=config.TRAIN_LR)
@@ -43,7 +42,7 @@ lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min',
 for epoch in range(1, config.TRAIN_EPOCHS + 1):
     train_loss = run.train(model, train_loader, loss_fn, optimizer, config.DEVICE)
     validation_loss, validation_macro_precision, validation_macro_recall, validation_macro_f1 = run.test(model,
-                                                                                                         validation_loader,
+                                                                                                         validation_dataset,
                                                                                                          loss_fn,
                                                                                                          config.DEVICE)
     lr_scheduler.step(validation_loss)
