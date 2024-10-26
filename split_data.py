@@ -51,20 +51,21 @@ print(f"测试数据中各个标签的数量为：{Counter([data['prediction'] f
 # 使用 plt 绘制各个数据集中各个标签的数量
 # 绘制 训练数据中各个标签的数量, train_data, 绘制为饼图
 plt.figure(figsize=(8, 6))
-plt.pie([len([data for data in train_data if data['prediction'] == t]) for t in prediction_types], labels=prediction_types, autopct='%1.1f%%')
-plt.title("训练数据中各个标签的数量")
+train_data_counter = Counter([data['prediction'] for data in train_data])
+plt.pie([train_data_counter[t] for t in prediction_types], labels=[f"{t} ({train_data_counter[t]})" for t in prediction_types], autopct='%1.1f%%')
+plt.title(f"训练数据中各个标签的数量({len(train_data)})")
 plt.show()
 
 # 绘制 验证数据中各个标签的数量, validation_data, 绘制为饼图
-plt.figure(figsize=(8, 6))
-plt.pie([len([data for data in validation_data if data['prediction'] == t]) for t in prediction_types], labels=prediction_types, autopct='%1.1f%%')
-plt.title("验证数据中各个标签的数量")
+validation_data_counter = Counter([data['prediction'] for data in validation_data])
+plt.pie([validation_data_counter[t] for t in prediction_types], labels=[f"{t} ({validation_data_counter[t]})" for t in prediction_types], autopct='%1.1f%%')
+plt.title(f"验证数据中各个标签的数量({len(validation_data)})")
 plt.show()
 
 # 绘制 测试数据中各个标签的数量, test_data, 绘制为饼图
-plt.figure(figsize=(8, 6))
-plt.pie([len([data for data in test_data if data['prediction'] == t]) for t in prediction_types], labels=prediction_types, autopct='%1.1f%%')
-plt.title("测试数据中各个标签的数量")
+test_data_counter = Counter([data['prediction'] for data in test_data])
+plt.pie([test_data_counter[t] for t in prediction_types], labels=[f"{t} ({test_data_counter[t]})" for t in prediction_types], autopct='%1.1f%%')
+plt.title(f"测试数据中各个标签的数量({len(test_data)})")
 plt.show()
 
 # 保存训练、验证、测试数据
