@@ -112,7 +112,10 @@ class SentimentAnalysisModel(torch.nn.Module):
                      hidden_size=hidden_size, num_layers=num_layers, output_size=output_size,
                      dropout_probs=dropout_probs)
         model.h0 = checkpoint['h0']
-        model.gru = checkpoint['gru']
+        if model_type == 'GRU':
+            model.gru = checkpoint['gru']
+        elif model_type == 'LSTM':
+            model.lstm = checkpoint['lstm']
         model.dropout = checkpoint['dropout']
         model.out_linear = checkpoint['out_linear']
         model.load_state_dict(checkpoint['model_state_dict'])

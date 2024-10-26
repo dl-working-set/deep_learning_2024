@@ -1,5 +1,5 @@
 import torch
-
+import os
 DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
 # 模型参数
@@ -29,3 +29,6 @@ WORD_EMBEDDING_PTH_FILENAME = f"./pt/word_embedding_{MODEL_TYPE}_{MODEL_HIDDEN_S
 TRAIN_DATA_RATIO = 0.8  # 训练数据比例
 VALIDATION_DATA_RATIO = 0.1  # 验证数据比例
 TEST_DATA_RATIO = 0.1  # 测试数据比例
+
+if os.path.exists("pt") is False:
+    os.makedirs("pt")
