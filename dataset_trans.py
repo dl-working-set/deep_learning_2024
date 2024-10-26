@@ -6,6 +6,11 @@ import pandas as pd
 
 from openai import OpenAI
 
+"""
+将从网上下载的公开数据集中的评论数据，调用大模型转换为情感分析数据集
+输出内容为jsonl格式，每行内容为json格式，包含comment、type、prediction三个字段
+"""
+
 
 class CommentSentimentTransformer(object):
   OPEN_AI_URL = os.getenv("OPEN_AI_URL", "https://api.openai.com/v1/chat/completions")
@@ -53,7 +58,8 @@ class CommentSentimentTransformer(object):
     """
     with open(self.file_path, 'r', encoding='utf-8') as f:
       data = pd.read_csv(self.file_path, sep='\t')
-      data[self.comment_column] = data[self.comment_column].apply(lambda x: x.strip())
+      # 转为字符串, 并去除空格  
+      data[self.comment_column] = data[self.comment_column].apply(lambda x: str(x).strip())
       # 如果 type_column 为空, 则设置为 ""
       if self.type_column not in data.columns:
         data[self.type_column] = ""
@@ -83,26 +89,39 @@ class CommentSentimentTransformer(object):
     """
     print(f"开始处理数据, 并保存到 {self.output_path}")
     self.load_data()
-    with open(self.output_path, 'a', encoding='utf-8') as f:
-      for item in tqdm.tqdm(self.data):
-        sentiment = self.get_sentiment(item[self.comment_column])
-        json_data = {
-          "comment": item[self.comment_column],
-          "type": item[self.type_column],
-          "prediction": sentiment
-        }
-        f.write(json.dumps(json_data, ensure_ascii=False) + "\n")
+    # 记录当前处理到的行数
+    processed_count = 0
+    if os.path.exists("processed_count.txt"):
+      with open("processed_count.txt", "r") as f:
+        processed_count = max([int(line.strip()) for line in f.readlines() if line.strip().isdigit()])
+        print(f"当前处理到的行数为 {processed_count}")
+    with open(self.output_path, 'a', encoding='utf-8') as f1, open("processed_count.txt", "w") as f2:
+        try:
+            for item in tqdm.tqdm(self.data[processed_count:]):
+                sentiment = self.get_sentiment(item[self.comment_column])
+                json_data = {
+                "comment": item[self.comment_column],
+                "type": item[self.type_column],
+                "prediction": sentiment
+                }
+                f1.write(json.dumps(json_data, ensure_ascii=False) + "\n")
+                processed_count += 1
+                f2.write(str(processed_count) + "\n")
+        except Exception as e:
+            f2.write(str(processed_count) + "\n")
+            print(f"处理数据时发生错误: {e}")
     print(f"数据处理完成, 并保存到 {self.output_path}")
 
 
 if __name__ == "__main__":
+  # 使用示例 python dataset_trans.py -f data/comment.csv -c comment -t type -o data/comment_sentiment.jsonl
   parser = argparse.ArgumentParser(description="情感分析数据预处理")
   parser.add_argument("-f", "--file_path", type=str, help="输入文件路径")
   parser.add_argument("-c", "--comment_column",  type=str, help="评论列名")
   parser.add_argument("-t", "--type_column", type=str, help="类型列名")
   parser.add_argument("-o", "--output_path", type=str, help="输出文件路径")
   args = parser.parse_args()
-    # 检查参数是否为空
+  # 检查参数是否为空
   if not all([args.file_path, args.comment_column, args.type_column, args.output_path]):
     raise ValueError("所有参数均不可为空")
   comment_sentiment_transformer = CommentSentimentTransformer(
