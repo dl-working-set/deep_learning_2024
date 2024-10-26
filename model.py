@@ -83,7 +83,7 @@ class SentimentAnalysisModel(torch.nn.Module):
         return self
 
     def save(self, filename):
-        torch.save({
+        model_state_dict = {
             'model_type': self.model_type,
             'sequence_length': self.sequence_length,
             'input_size': self.input_size,
@@ -92,11 +92,15 @@ class SentimentAnalysisModel(torch.nn.Module):
             'output_size': self.output_size,
             'dropout_probs': self.dropout_probs,
             'h0': self.h0,
-            'gru': self.gru,
             'dropout': self.dropout,
             'out_linear': self.out_linear,
             'model_state_dict': self.state_dict(),
-        }, filename)
+        }
+        if self.model_type == 'GRU':
+            model_state_dict['gru'] = self.gru
+        elif self.model_type == 'LSTM':
+            model_state_dict['lstm'] = self.lstm    
+        torch.save(model_state_dict, filename)
 
     @classmethod
     def load(self, filename):
