@@ -3,13 +3,14 @@ import os
 DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
 # 模型参数
-MODEL_TYPE = "GRU"  # 模型类型：GRU、LSTM、*
+MODEL_TYPE = "GRU"  # 模型类型：GRU、LSTM、Transformer
 MODEL_HIDDEN_SIZE = 512  # 模型隐藏层大小
 MODEL_DROPOUT_PROBS = 0.2  # 模型Dropout比例，取值 (0, 1)
 MODEL_ACTIVATION = "ReLU"  # TODO 模型激活函数
 
 # 训练参数
 SEQUENCE_LENGTH = 24  # 序列长度：参见optim.3.1
+EMBEDDING_DIM = 100  # 词向量维度
 WORD2VEC_VECTOR_SIZE = 100  # 词向量维度
 WORD2VEC_EPOCHS = 10  # 词向量训练轮次
 WORD2VEC_MIN_COUNT = 2  # 词向量最小出现次数

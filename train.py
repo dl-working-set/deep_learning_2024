@@ -6,33 +6,49 @@
 """
 
 import time
+
 import torch
+
 import config
 import dataset
+import dictionary
 import model
 import run
 import word_embedding
 
-model = model.SentimentAnalysisModel(model_type=config.MODEL_TYPE, sequence_length=config.SEQUENCE_LENGTH,
-                                     input_size=config.WORD2VEC_VECTOR_SIZE, hidden_size=config.MODEL_HIDDEN_SIZE,
-                                     num_layers=1, output_size=6, dropout_probs=config.MODEL_DROPOUT_PROBS).to(
-    config.DEVICE)
+# 1. 加载训练集数据
+train_contents, train_emotions = dataset.load_contents_labels(config.TRAIN_DATA_PATH)
 
-train_contents, _ = dataset.load_contents_labels(config.TRAIN_DATA_PATH)
+# 2. 加载停用词表
 stopwords = dataset.load_stopwords(config.STOPWORDS_PATH)
 
-word_embedding = word_embedding.WordEmbedding(sentences=train_contents, stopwords=stopwords,
-                                              word2vec_vector_size=config.WORD2VEC_VECTOR_SIZE,
-                                              word2vec_epochs=config.WORD2VEC_EPOCHS,
-                                              word2vec_min_count=config.WORD2VEC_MIN_COUNT)
+# 3. 分词、标签化
+train_tokens = dataset.tokenization(train_contents, stopwords)
 
-train_loader = dataset.SentimentAnalysisDataset(data_path=config.TRAIN_DATA_PATH, word_embedding=word_embedding,
-                                                sequence_length=config.SEQUENCE_LENGTH, ).construct_dataloader(
-    batch_size=config.TRAIN_BATCH_SIZE)
+# 4. 词典（效率高于word2vec）
+dictionary = dictionary.SentimentAnalysisDictionary(train_tokens=train_tokens)
 
-validation_dataset = dataset.SentimentAnalysisDataset(data_path=config.VALIDATION_DATA_PATH,
-                                                     word_embedding=word_embedding,
-                                                     sequence_length=config.SEQUENCE_LENGTH, ).dataset
+# 5. 构建数据集
+train_dataset = dataset.SentimentAnalysisDataset(tokens=train_tokens, emotions=train_emotions,
+                                                 sequence_length=config.SEQUENCE_LENGTH,
+                                                 dictionary=dictionary, )
+
+train_loader = train_dataset.construct_dataloader(config.TRAIN_BATCH_SIZE)
+
+model = model.SentimentAnalysisModel(model_type=config.MODEL_TYPE, sequence_length=config.SEQUENCE_LENGTH,
+                                     embedding_dim=config.EMBEDDING_DIM, num_embeddings=dictionary.size,
+                                     hidden_size=config.MODEL_HIDDEN_SIZE, num_layers=1, output_size=6,
+                                     dropout_probs=config.MODEL_DROPOUT_PROBS).to(config.DEVICE)
+# 6. 加载验证集数据
+validation_contents, validation_emotions = dataset.load_contents_labels(config.VALIDATION_DATA_PATH)
+
+# 7. 分词、标签化
+validation_tokens = dataset.tokenization(validation_contents, stopwords)
+
+# 7. 构建验证集
+validation_dataset = dataset.SentimentAnalysisDataset(tokens=validation_tokens, emotions=validation_emotions,
+                                                      sequence_length=config.SEQUENCE_LENGTH,
+                                                      dictionary=dictionary, ).dataset
 
 loss_fn = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=config.TRAIN_LR)
