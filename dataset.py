@@ -10,7 +10,6 @@ import collections
 import json
 import logging
 import os
-import random
 import re
 
 import jieba
@@ -24,6 +23,7 @@ class SentimentAnalysisDataset:
         if len(tokens) == 0:
             return
         # 1. 移除tokenization为空的样本
+        tokens = [[word for word in token if word in dictionary.word_id_dict] for token in tokens]
         tokens, emotions = zip(*[(t, e) for t, e in zip(tokens, emotions) if len(t) > 0])
         self.tokens = tokens
 
@@ -35,9 +35,8 @@ class SentimentAnalysisDataset:
         tokens_padded = [padding(token, sequence_length) for token in tokens_truncated]
 
         #   2.3 tokens to ids
-        self.tokens_ids = [[dictionary.word_id_dict[word] if word in dictionary.word_id_dict else random.randint(1,
-                                                                                                                 dictionary.size - 1)
-                            for word in token] for token in tokens_padded]
+        self.tokens_ids = [[dictionary.word_id_dict[word] for word in token if word in dictionary.word_id_dict] for
+                           token in tokens_padded]
 
         #   2.4 emotions to labels
         self.labels = [emotion2label.get(emotion) for emotion in emotions]
