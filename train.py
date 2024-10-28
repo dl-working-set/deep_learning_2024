@@ -9,18 +9,17 @@ import time
 
 import torch
 
-import config
 import dataset
 import dictionary
 import model
 import run
-import word_embedding
+from init import config
 
 # 1. 加载训练集数据
-train_contents, train_emotions = dataset.load_contents_labels(config.TRAIN_DATA_PATH)
+train_contents, train_emotions = dataset.load_contents_labels(config.train_data_path)
 
 # 2. 加载停用词表
-stopwords = dataset.load_stopwords(config.STOPWORDS_PATH)
+stopwords = dataset.load_stopwords(config.stopwords_path)
 
 # 3. 分词、标签化
 train_tokens = dataset.tokenization(train_contents, stopwords)
@@ -30,37 +29,38 @@ dictionary = dictionary.SentimentAnalysisDictionary(train_tokens=train_tokens)
 
 # 5. 构建数据集
 train_dataset = dataset.SentimentAnalysisDataset(tokens=train_tokens, emotions=train_emotions,
-                                                 sequence_length=config.SEQUENCE_LENGTH,
+                                                 sequence_length=config.model_sequence_length,
                                                  dictionary=dictionary, )
 
-train_loader = train_dataset.construct_dataloader(config.TRAIN_BATCH_SIZE)
+train_loader = train_dataset.construct_dataloader(config.training_batch_size)
 
-model = model.SentimentAnalysisModel(model_type=config.MODEL_TYPE, sequence_length=config.SEQUENCE_LENGTH,
-                                     embedding_dim=config.EMBEDDING_DIM, num_embeddings=dictionary.size,
-                                     hidden_size=config.MODEL_HIDDEN_SIZE, num_layers=1, output_size=6,
-                                     dropout_probs=config.MODEL_DROPOUT_PROBS).to(config.DEVICE)
+model = model.SentimentAnalysisModel(model_type=config.model_type, sequence_length=config.model_sequence_length,
+                                     embedding_dim=config.model_embedding_dim, num_embeddings=dictionary.size,
+                                     hidden_size=config.model_hidden_size, num_layers=1,
+                                     num_classes=config.model_num_classes,
+                                     dropout_probs=config.model_dropout_probs).to(config.device)
 # 6. 加载验证集数据
-validation_contents, validation_emotions = dataset.load_contents_labels(config.VALIDATION_DATA_PATH)
+validation_contents, validation_emotions = dataset.load_contents_labels(config.validation_data_path)
 
 # 7. 分词、标签化
 validation_tokens = dataset.tokenization(validation_contents, stopwords)
 
 # 7. 构建验证集
 validation_dataset = dataset.SentimentAnalysisDataset(tokens=validation_tokens, emotions=validation_emotions,
-                                                      sequence_length=config.SEQUENCE_LENGTH,
+                                                      sequence_length=config.model_sequence_length,
                                                       dictionary=dictionary, ).dataset
 
 loss_fn = torch.nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=config.TRAIN_LR)
+optimizer = torch.optim.Adam(model.parameters(), lr=config.training_learning_rate)
 lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min',
-                                                          factor=config.TRAIN_LR_SCHEDULER_FACTOR,
+                                                          factor=config.training_lr_scheduler_factor,
                                                           patience=5)
-for epoch in range(1, config.TRAIN_EPOCHS + 1):
-    train_loss = run.train(model, train_loader, loss_fn, optimizer, config.DEVICE)
+for epoch in range(1, config.training_epochs + 1):
+    train_loss = run.train(model, train_loader, loss_fn, optimizer, config.device)
     validation_loss, validation_macro_precision, validation_macro_recall, validation_macro_f1 = run.test(model,
                                                                                                          validation_dataset,
                                                                                                          loss_fn,
-                                                                                                         config.DEVICE)
+                                                                                                         config.device)
     lr_scheduler.step(validation_loss)
     print('epoch[{:d}]'.format(epoch),
           'train_loss[{:f}]'.format(train_loss),
@@ -72,5 +72,5 @@ for epoch in range(1, config.TRAIN_EPOCHS + 1):
           time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
 
 # 3. 模型保存
-word_embedding.save(filename=config.WORD_EMBEDDING_PTH_FILENAME)
-model.save(filename=config.MODEL_PTH_FILENAME)
+model.save(filename=config.model_pt_path)
+dictionary.save(filename=config.dictionary_pt_path)

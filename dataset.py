@@ -9,6 +9,8 @@
 import collections
 import json
 import logging
+import os
+import random
 import re
 
 import jieba
@@ -21,22 +23,26 @@ class SentimentAnalysisDataset:
     def __init__(self, tokens=[], emotions=[], sequence_length=50, dictionary=None, ):
         if len(tokens) == 0:
             return
-
+        # 1. 移除tokenization为空的样本
+        tokens, emotions = zip(*[(t, e) for t, e in zip(tokens, emotions) if len(t) > 0])
         self.tokens = tokens
-        # 1. Align Sequence
-        #   1.1 Truncating：向量截断
+
+        # 2. Align Sequence
+        #   2.1 Truncating：向量截断
         tokens_truncated = [token[:sequence_length] for token in tokens]
 
-        #   1.2 Padding
+        #   2.2 Padding
         tokens_padded = [padding(token, sequence_length) for token in tokens_truncated]
 
-        #   1.3 tokens to ids
-        self.tokens_ids = [[dictionary.word_id_dict[word] for word in token] for token in tokens_padded]
+        #   2.3 tokens to ids
+        self.tokens_ids = [[dictionary.word_id_dict[word] if word in dictionary.word_id_dict else random.randint(1,
+                                                                                                                 dictionary.size - 1)
+                            for word in token] for token in tokens_padded]
 
-        #   1.4 emotions to labels
+        #   2.4 emotions to labels
         self.labels = [emotion2label.get(emotion) for emotion in emotions]
 
-        # 2. 构建dataset
+        # 3. 构建dataset
         self.dataset = torch.utils.data.TensorDataset(torch.LongTensor(numpy.array(self.tokens_ids)),
                                                       torch.LongTensor(self.labels))
 
@@ -63,25 +69,29 @@ def load_stopwords(stopwords_path=[]):
     :param stopwords_path: 停用词表路径
     :return: 停用词表
     """
+    path = os.path.dirname(__file__)
     stopwords = []
     try:
-        for path in stopwords_path:
-            with open(path, "r") as file:
+        for filename in stopwords_path:
+            absolute_path = os.path.join(path, filename)
+            with open(absolute_path, "r") as file:
                 while True:
                     line = file.readline()
                     if not line:
                         break
                     stopwords.append(line.strip('\n'))
     except FileNotFoundError:
-        logging.warning("No stopwords file found.")
+        logging.Error(f"File[{absolute_path}] not found.")
     return stopwords
 
 
 def load_contents_labels(filename):
+    path = os.path.dirname(__file__)
+    absolute_path = os.path.join(path, filename)
     contents = []
     emotions = []
     try:
-        with open(filename, "r") as file:
+        with open(absolute_path, "r") as file:
             while True:
                 line = file.readline()
                 if not line:
@@ -93,7 +103,8 @@ def load_contents_labels(filename):
                     contents.append(content)
                     emotions.append(emotion)
     except FileNotFoundError:
-        logging.Error(f"File[{filename}] not found.")
+        logging.Error(f"File[{absolute_path}] not found.")
+    logging.info(f'{len(contents)} comments loaded.')
     return contents, emotions
 
 
