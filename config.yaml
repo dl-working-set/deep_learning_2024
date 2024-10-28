@@ -5,7 +5,7 @@ model:
   dropout_probs: 0.2 # 模型Dropout比例，取值 (0, 1)
   activation: ReLU # TODO 模型激活函数
   embedding_dim: 100  # 词向量维度
-  sequence_length: 24  # 序列长度
+  sequence_length: 35  # 序列长度
   num_classes: 6  # 分类数
 
 training:
