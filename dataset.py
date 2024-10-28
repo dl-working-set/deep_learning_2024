@@ -18,29 +18,26 @@ from matplotlib import pyplot as plt
 
 
 class SentimentAnalysisDataset:
-    def __init__(self, data_path=None, word_embedding=None, sequence_length=100, ):
-        if data_path is None or word_embedding is None:
+    def __init__(self, tokens=[], emotions=[], sequence_length=50, dictionary=None, ):
+        if len(tokens) == 0:
             return
 
-        # 1. 加载原始数据
-        contents, emotions = load_contents_labels(data_path)
+        self.tokens = tokens
+        # 1. Align Sequence
+        #   1.1 Truncating：向量截断
+        tokens_truncated = [token[:sequence_length] for token in tokens]
 
-        # 2. 获取词向量
-        sentences_vecs = word_embedding.sentences2vecs(sentences=contents)
+        #   1.2 Padding
+        tokens_padded = [padding(token, sequence_length) for token in tokens_truncated]
 
-        # 3. Align Sequence
-        #   3.1 Truncating：向量截断
-        sentences_vecs_truncated = [sentence_vec[:sequence_length] for sentence_vec in sentences_vecs]
+        #   1.3 tokens to ids
+        self.tokens_ids = [[dictionary.word_id_dict[word] for word in token] for token in tokens_padded]
 
-        #   3.2 token to vec：转为词向量，padding
-        self.vecs = [word_embedding.vec_padding(sentences_vec, sequence_length) for
-                     sentences_vec in sentences_vecs_truncated]
-
-        #   3.3 label to
+        #   1.4 emotions to labels
         self.labels = [emotion2label.get(emotion) for emotion in emotions]
 
-        # 4、构建dataset
-        self.dataset = torch.utils.data.TensorDataset(torch.Tensor(numpy.array(self.vecs)),
+        # 2. 构建dataset
+        self.dataset = torch.utils.data.TensorDataset(torch.LongTensor(numpy.array(self.tokens_ids)),
                                                       torch.LongTensor(self.labels))
 
     # 由于样本中标签分布不均匀，在不改变训练数据的前提下，使用“权重才采样器”均衡每个minibatch数据，提升模型拟合度
@@ -52,6 +49,12 @@ class SentimentAnalysisDataset:
                                                                num_samples=len(samples_weights),
                                                                replacement=True)
         return torch.utils.data.DataLoader(dataset=self.dataset, batch_size=batch_size, sampler=train_sampler)
+
+
+def padding(token, sequence_length):
+    while sequence_length > len(token):
+        token.append('<PAD>')
+    return token
 
 
 def load_stopwords(stopwords_path=[]):
