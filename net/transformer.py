@@ -33,7 +33,7 @@ class PositionalEncoding(torch.nn.Module):
 
 class TransformerEncoderLayer(torch.nn.Module):
     def __init__(self, embedding_dim, num_heads, dim_feedforward=2048, dropout_probs=0.):
-        super(TransformerEncoderLayer, self).__init__()
+        super().__init__()
         self.self_attn = torch.nn.MultiheadAttention(embedding_dim, num_heads, dropout=dropout_probs)
         self.linear1 = torch.nn.Linear(embedding_dim, dim_feedforward)
         self.dropout = torch.nn.Dropout(dropout_probs)
@@ -86,12 +86,13 @@ class TransformerEncoder(torch.nn.Module):
         src_mask = None  # Decoder
         src_key_padding_mask = (src == 0)
         # Embedding and Positional Encoding
-        src = self.encoder(src) * math.sqrt(self.embedding_dim)
-        # src = self.encoder(src)
+        # src = self.encoder(src) * math.sqrt(self.embedding_dim)
+        src = self.encoder(src)
         src = self.pos_encoder(src)
 
         # Pass through the encoder layers
-        output = src.transpose(0, 1)  # Convert from [batch_size, seq_len, embedding_dim] to [seq_len, batch_size, embedding_dim]
+        # Convert from [batch_size, seq_len, embedding_dim] to [seq_len, batch_size, embedding_dim]
+        output = src.transpose(0, 1)
         for layer in self.layers:
             output = layer(output, src_mask=src_mask, src_key_padding_mask=src_key_padding_mask)
 

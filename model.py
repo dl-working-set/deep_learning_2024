@@ -5,6 +5,8 @@
     - 输出层：5分类
   - 模型保存
 """
+import os
+
 import torch
 
 from net.GRU import TorchGRU
@@ -19,7 +21,7 @@ class SentimentAnalysisModel(torch.nn.Module):
                  num_embeddings=10000,
                  hidden_size=1024,
                  num_layers=1,
-                 output_size=6,
+                 num_classes=6,
                  dropout_probs=0.):
         """
         情绪分析模型
@@ -30,7 +32,7 @@ class SentimentAnalysisModel(torch.nn.Module):
         :param num_embeddings: 
         :param hidden_size: 
         :param num_layers: 
-        :param output_size: 
+        :param num_classes:
         :param dropout_probs: 
         """
         super().__init__()
@@ -44,14 +46,14 @@ class SentimentAnalysisModel(torch.nn.Module):
         if self.model_type == 'GRU':
             self.net = TorchGRU(sequence_length=sequence_length, embedding_dim=embedding_dim,
                                 num_embeddings=num_embeddings, hidden_size=hidden_size,
-                                num_layers=num_layers, output_size=output_size, dropout_probs=dropout_probs)
+                                num_layers=num_layers, num_classes=num_classes, dropout_probs=dropout_probs)
         elif self.model_type == 'LSTM':
             self.net = TorchLSTM(sequence_length=sequence_length, embedding_dim=embedding_dim,
                                  num_embeddings=num_embeddings, hidden_size=hidden_size,
-                                 num_layers=num_layers, output_size=output_size, dropout_probs=dropout_probs)
+                                 num_layers=num_layers, num_classes=num_classes, dropout_probs=dropout_probs)
         elif self.model_type == 'Transformer':
             self.net = TransformerEncoder(num_embeddings=num_embeddings, embedding_dim=embedding_dim, num_heads=4,
-                                          dim_feedforward=hidden_size, nlayers=6, num_classes=output_size,
+                                          dim_feedforward=hidden_size, nlayers=6, num_classes=num_classes,
                                           dropout_probs=dropout_probs)
         elif self.model_type == '*':
             pass
@@ -65,18 +67,22 @@ class SentimentAnalysisModel(torch.nn.Module):
         return self
 
     def save(self, filename):
+        path = os.path.dirname(__file__)
+        absolute_path = os.path.join(path, filename)
         torch.save({
             'model_type': self.model_type,
             'net': self.net,
             'model_state_dict': self.state_dict(),
-        }, filename)
+        }, absolute_path)
 
     @classmethod
-    def load(self, filename):
-        checkpoint = torch.load(filename)
-        model = self()
-        model.model_type = checkpoint['model_type']
-        model.net = checkpoint['net']
-        model.load_state_dict(checkpoint['model_state_dict'])
-        model.eval()
-        return model
+    def load(cls, filename):
+        path = os.path.dirname(__file__)
+        absolute_path = os.path.join(path, filename)
+        checkpoint = torch.load(f=absolute_path, weights_only=False)
+        self = cls()
+        self.model_type = checkpoint['model_type']
+        self.net = checkpoint['net']
+        self.load_state_dict(checkpoint['model_state_dict'])
+        self.eval()
+        return self

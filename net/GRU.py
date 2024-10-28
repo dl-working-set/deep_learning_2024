@@ -35,13 +35,14 @@ class TorchGRU(torch.nn.Module):
 
     def forward(self, x):
         x = self.embedding(x)
-        h0 = torch.zeros(self.num_layers, self.sequence_length, self.hidden_size)
+        h0 = torch.zeros(self.num_layers, self.sequence_length, self.hidden_size).to(x.device)
         out, hn = self.gru(x, h0)
         out = self.dropout(out)
         return torch.stack([self.out_linear(out[i].view(-1)) for i in range(out.shape[0])])
 
     def to(self, device):
         super().to(device)
+        self.embedding = self.embedding.to(device)
         self.gru = self.gru.to(device)
         self.out_linear = self.out_linear.to(device)
         return self
