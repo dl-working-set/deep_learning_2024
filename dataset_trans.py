@@ -72,7 +72,7 @@ class CommentSentimentTransformer(object):
         :param comment: 评论内容
         :return: 情感倾向
         """
-        messages=[
+        messages = [
             {"role": "system", "content": self.SYSTEM_PROMPT},
             {"role": "user", "content": comment}
         ]

@@ -9,8 +9,8 @@ from config import TRAIN_DATA_PATH, VALIDATION_DATA_PATH, TEST_DATA_PATH, RAW_DA
 
 # 设置 matplotlib 中文显示
 
-mpl.rcParams['font.sans-serif'] = ['Heiti TC']
-mpl.rcParams['axes.unicode_minus'] = False  
+mpl.rcParams["font.sans-serif"] = ["SimHei"]
+mpl.rcParams["axes.unicode_minus"] = False
 
 prediction_types = ["非常满意", "满意", "中立", "不满意", "非常不满意", "无效评论"]
 prediction_map = {t: list() for t in prediction_types}
