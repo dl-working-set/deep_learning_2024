@@ -2,21 +2,21 @@ import torch
 
 
 class TorchLSTM(torch.nn.Module):
-    def __init__(self, sequence_length, embedding_dim, num_embeddings, hidden_size, num_layers, num_classes,
-                 dropout_probs):
+    def __init__(self, sequence_length, embedding_dim, hidden_size, num_layers, num_classes,
+                 dropout_probs, embedding=None):
         """
         长短期记忆网络（Long Short-Term Memory, LSTM）
 
         :param sequence_length:
         :param embedding_dim:
-        :param num_embeddings:
         :param hidden_size:
         :param num_layers:
         :param num_classes:
         :param dropout_probs:
+        :param embedding:
         """
         super().__init__()
-        self.embedding = torch.nn.Embedding(num_embeddings=num_embeddings, embedding_dim=embedding_dim)
+        self.embedding = embedding
         self.sequence_length = sequence_length
         self.hidden_size = hidden_size
         self.num_layers = num_layers
@@ -33,7 +33,7 @@ class TorchLSTM(torch.nn.Module):
                 torch.nn.init.xavier_uniform_(param)
 
     def forward(self, x):
-        x = self.embedding(x)
+        x = self.embedding.vectors[x]
         h0 = torch.zeros(self.num_layers, self.sequence_length, self.hidden_size).to(x.device)
         c0 = torch.zeros(self.num_layers, self.sequence_length, self.hidden_size).to(x.device)
         out, (hn, cn) = self.lstm(x, (h0, c0))

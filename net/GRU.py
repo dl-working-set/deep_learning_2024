@@ -2,8 +2,8 @@ import torch
 
 
 class TorchGRU(torch.nn.Module):
-    def __init__(self, sequence_length, embedding_dim, num_embeddings, hidden_size, num_layers, num_classes,
-                 dropout_probs):
+    def __init__(self, sequence_length, embedding_dim, hidden_size, num_layers, num_classes,
+                 dropout_probs, embedding=None):
         """
         门控循环单元网络（Gated Recurrent Unit, GRU）
 
@@ -14,14 +14,14 @@ class TorchGRU(torch.nn.Module):
         :param num_layers:
         :param num_classes:
         :param dropout_probs:
+        :param embedding:
         """
         super().__init__()
-        self.embedding = torch.nn.Embedding(num_embeddings=num_embeddings, embedding_dim=embedding_dim)
+        self.embedding = embedding
         self.sequence_length = sequence_length
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.gru = torch.nn.GRU(input_size=embedding_dim, hidden_size=hidden_size, num_layers=num_layers)
-        # self.h0 = torch.zeros(self.num_layers, self.sequence_length, self.hidden_size).to(device)
         self.dropout = torch.nn.Dropout(dropout_probs)
         self.out_linear = torch.nn.Sequential(
             torch.nn.Linear(sequence_length * hidden_size, hidden_size),
@@ -34,7 +34,7 @@ class TorchGRU(torch.nn.Module):
                 torch.nn.init.xavier_uniform_(param)
 
     def forward(self, x):
-        x = self.embedding(x)
+        x = self.embedding.vectors[x]
         h0 = torch.zeros(self.num_layers, self.sequence_length, self.hidden_size).to(x.device)
         out, hn = self.gru(x, h0)
         out = self.dropout(out)

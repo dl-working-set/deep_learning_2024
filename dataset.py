@@ -17,13 +17,15 @@ import numpy
 import torch
 from matplotlib import pyplot as plt
 
+from init import config
+
 
 class SentimentAnalysisDataset:
-    def __init__(self, tokens=[], emotions=[], sequence_length=50, dictionary=None, ):
+    def __init__(self, tokens=[], emotions=[], sequence_length=50, key_to_index=[]):
         if len(tokens) == 0:
             return
         # 1. 移除tokenization为空的样本
-        tokens = [[word for word in token if word in dictionary.word_id_dict] for token in tokens]
+        tokens = [[word for word in token if word in key_to_index] for token in tokens]
         tokens, emotions = zip(*[(t, e) for t, e in zip(tokens, emotions) if len(t) > 0])
         self.tokens = tokens
 
@@ -35,7 +37,7 @@ class SentimentAnalysisDataset:
         tokens_padded = [padding(token, sequence_length) for token in tokens_truncated]
 
         #   2.3 tokens to ids
-        self.tokens_ids = [[dictionary.word_id_dict[word] for word in token if word in dictionary.word_id_dict] for
+        self.tokens_ids = [[key_to_index[word] for word in token if word in key_to_index] for
                            token in tokens_padded]
 
         #   2.4 emotions to labels
@@ -58,7 +60,7 @@ class SentimentAnalysisDataset:
 
 def padding(token, sequence_length):
     while sequence_length > len(token):
-        token.append('<PAD>')
+        token.append(config.padding_word)
     return token
 
 
@@ -121,8 +123,6 @@ def tokenization(sentences, stopwords):
                 # 去除停用词
                 if seg not in stopwords:
                     token.append(seg)
-            # if len(token) > 0:
-            #     tokens.append(token)
             tokens.append(token)
         except Exception as e:
             logging.error(f'sentences preprocessing error - {e}')
@@ -150,7 +150,7 @@ def tokens_pie(title, tokens):
     sum = 0
     for i in range(len(token_len)):
         sum += counts[i]
-        print(f'token长度{token_len[i]} 占比{sum / len(tokens):.4f}%')
+        print(f'token长度{token_len[i]} 占比{sum * 100 / len(tokens):.4f}%')
     plt.bar(x=token_len, height=counts)
     plt.title(title)
     plt.xlim(0, int(max(token_len) * 0.15))
@@ -183,7 +183,7 @@ emotion2label = {
     '中立': 2,
     '不满意': 3,
     '非常不满意': 4,
-    '无效评论': 5
+    # '无效评论': 5
 }
 
 label2emotion = {
@@ -192,5 +192,5 @@ label2emotion = {
     2: '中立',
     3: '不满意',
     4: '非常不满意',
-    5: '无效评论'
+    # 5: '无效评论'
 }

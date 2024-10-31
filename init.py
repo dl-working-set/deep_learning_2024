@@ -98,12 +98,16 @@ class Config:
         return self.path.get('model_pt')
 
     @property
-    def dictionary_pt_path(self):
-        return self.path.get('dictionary_pt')
+    def embedding_pt_path(self):
+        return self.path.get('embedding_pt')
 
     @property
     def device(self):
         return torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
+    @property
+    def padding_word(self):
+        return '<PAD>'
 
 
 # 获取当前文件的绝对路径

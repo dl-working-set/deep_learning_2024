@@ -10,7 +10,7 @@ import time
 import torch
 
 import dataset
-import dictionary
+import embedding
 import model
 import run
 from init import config
@@ -24,21 +24,24 @@ stopwords = dataset.load_stopwords(config.stopwords_path)
 # 3. 分词、标签化
 train_tokens = dataset.tokenization(train_contents, stopwords)
 
-# 4. 词典（效率高于word2vec）
-dictionary = dictionary.SentimentAnalysisDictionary(train_tokens=train_tokens)
+# 4. 词向量预训练
+word_embedding = embedding.WordEmbedding(tokens=(train_tokens + [[config.padding_word]]),
+                                         vector_size=config.model_embedding_dim).to(config.device)
 
 # 5. 构建数据集
 train_dataset = dataset.SentimentAnalysisDataset(tokens=train_tokens, emotions=train_emotions,
                                                  sequence_length=config.model_sequence_length,
-                                                 dictionary=dictionary, )
+                                                 key_to_index=word_embedding.key_to_index)
 
 train_loader = train_dataset.construct_dataloader(config.training_batch_size)
 
+# 6. 创建模型
 model = model.SentimentAnalysisModel(model_type=config.model_type, sequence_length=config.model_sequence_length,
-                                     embedding_dim=config.model_embedding_dim, num_embeddings=dictionary.size,
+                                     embedding_dim=config.model_embedding_dim,
                                      hidden_size=config.model_hidden_size, num_layers=1,
                                      num_classes=config.model_num_classes,
-                                     dropout_probs=config.model_dropout_probs).to(config.device)
+                                     dropout_probs=config.model_dropout_probs,
+                                     embedding=word_embedding).to(config.device)
 # 6. 加载验证集数据
 validation_contents, validation_emotions = dataset.load_contents_labels(config.validation_data_path)
 
@@ -48,7 +51,7 @@ validation_tokens = dataset.tokenization(validation_contents, stopwords)
 # 7. 构建验证集
 validation_dataset = dataset.SentimentAnalysisDataset(tokens=validation_tokens, emotions=validation_emotions,
                                                       sequence_length=config.model_sequence_length,
-                                                      dictionary=dictionary, ).dataset
+                                                      key_to_index=word_embedding.key_to_index, ).dataset
 
 loss_fn = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=config.training_learning_rate)
@@ -72,5 +75,5 @@ for epoch in range(1, config.training_epochs + 1):
           time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
 
 # 3. 模型保存
+word_embedding.save(filename=config.embedding_pt_path)
 model.save(filename=config.model_pt_path)
-dictionary.save(filename=config.dictionary_pt_path)

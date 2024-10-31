@@ -18,22 +18,22 @@ class SentimentAnalysisModel(torch.nn.Module):
     def __init__(self, model_type=None,
                  sequence_length=100,
                  embedding_dim=100,
-                 num_embeddings=10000,
                  hidden_size=1024,
                  num_layers=1,
-                 num_classes=6,
-                 dropout_probs=0.):
+                 num_classes=5,
+                 dropout_probs=0.,
+                 embedding=None, ):
         """
         情绪分析模型
 
-        :param model_type: 
-        :param sequence_length: 
-        :param embedding_dim: 
-        :param num_embeddings: 
-        :param hidden_size: 
-        :param num_layers: 
+        :param model_type:
+        :param sequence_length:
+        :param embedding_dim:
+        :param hidden_size:
+        :param num_layers:
         :param num_classes:
-        :param dropout_probs: 
+        :param dropout_probs:
+        :param embedding:
         """
         super().__init__()
         if model_type is None:
@@ -45,16 +45,16 @@ class SentimentAnalysisModel(torch.nn.Module):
         # 模型类型：GRU、LSTM、Transformer、
         if self.model_type == 'GRU':
             self.net = TorchGRU(sequence_length=sequence_length, embedding_dim=embedding_dim,
-                                num_embeddings=num_embeddings, hidden_size=hidden_size,
-                                num_layers=num_layers, num_classes=num_classes, dropout_probs=dropout_probs)
+                                hidden_size=hidden_size, num_layers=num_layers, num_classes=num_classes,
+                                dropout_probs=dropout_probs, embedding=embedding)
         elif self.model_type == 'LSTM':
             self.net = TorchLSTM(sequence_length=sequence_length, embedding_dim=embedding_dim,
-                                 num_embeddings=num_embeddings, hidden_size=hidden_size,
-                                 num_layers=num_layers, num_classes=num_classes, dropout_probs=dropout_probs)
+                                 hidden_size=hidden_size, num_layers=num_layers, num_classes=num_classes,
+                                 dropout_probs=dropout_probs, embedding=embedding)
         elif self.model_type == 'Transformer':
-            self.net = TransformerEncoder(num_embeddings=num_embeddings, embedding_dim=embedding_dim, num_heads=4,
-                                          dim_feedforward=hidden_size, nlayers=6, num_classes=num_classes,
-                                          dropout_probs=dropout_probs)
+            self.net = TransformerEncoder(embedding_dim=embedding_dim, dim_feedforward=hidden_size,
+                                          nlayers=6, num_heads=4, num_classes=num_classes, dropout_probs=dropout_probs,
+                                          embedding=embedding)
         elif self.model_type == '*':
             pass
 

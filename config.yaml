@@ -1,15 +1,15 @@
 # 配置文件
 model:
-  type: GRU  # 模型类型：GRU、LSTM、Transformer
+  type: Transformer  # 模型类型：GRU、LSTM、Transformer
   hidden_size: 512 # 模型隐藏层大小
-  dropout_probs: 0.2 # 模型Dropout比例，取值 (0, 1)
+  dropout_probs: 0.4 # 模型Dropout比例，取值 (0, 1)
   activation: ReLU # TODO 模型激活函数
   embedding_dim: 100  # 词向量维度
-  sequence_length: 35  # 序列长度
-  num_classes: 6  # 分类数
+  sequence_length: 30  # 序列长度
+  num_classes: 5  # 分类数
 
 training:
-  batch_size: 128  # 训练批次大小
+  batch_size: 256  # 训练批次大小
   epochs: 50  # 训练轮次
   learning_rate: 0.001  # 学习率
   lr_scheduler_factor: 0.8  # 学习率衰减因子
@@ -22,5 +22,5 @@ path:
   train_data: file/train.ndjson  # 训练集路径
   validation_data: file/validation.ndjson  # 验证集路径
   test_data: file/test.ndjson  # 测试集路径
-  model_pt: pt/sentiment_analysis_{model_type}_{model_hidden_size}_{model_dropout_probs}_{model_activation}_{model_embedding_dim}_{model_sequence_length}_{training_batch_size}_{training_epochs}_{training_learning_rate}_{training_lr_scheduler_factor}_pt  # 模型保存路径
-  dictionary_pt: pt/dictionary.pt  # 字典保存路径
+  model_pt: pt/model_{model_type}_{model_hidden_size}_{model_dropout_probs}_{model_activation}_{model_embedding_dim}_{model_sequence_length}_{training_batch_size}_{training_epochs}_{training_learning_rate}_{training_lr_scheduler_factor}.pt  # 模型保存路径
+  embedding_pt: pt/embedding.pt  # 预训练词向量保存路径

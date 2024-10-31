@@ -2,6 +2,8 @@ import math
 
 import torch
 
+from init import config
+
 
 class ClassificationHead(torch.nn.Module):
     def __init__(self, embedding_dim, num_classes):
@@ -16,7 +18,7 @@ class ClassificationHead(torch.nn.Module):
 
 
 class PositionalEncoding(torch.nn.Module):
-    def __init__(self, embedding_dim, max_len):
+    def __init__(self, embedding_dim, max_len=5000):
         super(PositionalEncoding, self).__init__()
         pe = torch.zeros(max_len, embedding_dim)
         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
@@ -48,12 +50,10 @@ class TransformerEncoderLayer(torch.nn.Module):
         for param in self.parameters():
             if param.dim() > 1:
                 torch.nn.init.xavier_uniform_(param)
-        pass
 
     def forward(self, src, src_mask=None, src_key_padding_mask=None):
         # Multi-Head Self-Attention
-        src2 = self.self_attn(src, src, src, attn_mask=src_mask,
-                              key_padding_mask=src_key_padding_mask)[0]
+        src2 = self.self_attn(src, src, src, attn_mask=src_mask, key_padding_mask=src_key_padding_mask)[0]
         src = src + self.dropout1(src2)
         src = self.norm1(src)
 
@@ -65,13 +65,16 @@ class TransformerEncoderLayer(torch.nn.Module):
 
 
 class TransformerEncoder(torch.nn.Module):
-    def __init__(self, num_embeddings, embedding_dim, num_heads, dim_feedforward, nlayers, num_classes,
-                 dropout_probs=0.):
+    def __init__(self, embedding_dim=100, num_heads=5, dim_feedforward=1024, nlayers=6, num_classes=5,
+                 dropout_probs=0., embedding=None):
         super(TransformerEncoder, self).__init__()
         self.model_type = 'TransformerEncoder'
         self.src_mask = None
-        self.pos_encoder = PositionalEncoding(embedding_dim=embedding_dim, max_len=num_embeddings)
-        self.encoder = torch.nn.Embedding(num_embeddings=num_embeddings, embedding_dim=embedding_dim)
+        # self.pos_encoder = PositionalEncoding(embedding_dim=embedding_dim, max_len=num_embeddings)
+        self.pos_encoder = PositionalEncoding(embedding_dim=embedding_dim)
+        # 使用预训练gensim.word2vec 代替 torch.nn.Embedding
+        # self.encoder = torch.nn.Embedding(num_embeddings=num_embeddings, embedding_dim=embedding_dim)
+        self.encoder = embedding
         self.layers = torch.nn.ModuleList(
             [TransformerEncoderLayer(embedding_dim, num_heads, dim_feedforward, dropout_probs) for _ in range(nlayers)])
         self.embedding_dim = embedding_dim
@@ -80,14 +83,18 @@ class TransformerEncoder(torch.nn.Module):
         for param in self.parameters():
             if param.dim() > 1:
                 torch.nn.init.xavier_uniform_(param)
-        pass
 
     def forward(self, src):
         src_mask = None  # Decoder
-        src_key_padding_mask = (src == 0)
+
+        # 使用 <PAD> 标记mask
+        # src_key_padding_mask = (src == 0)
+        src_key_padding_mask = (src == self.encoder.key_to_index[config.padding_word])
+
         # Embedding and Positional Encoding
-        # src = self.encoder(src) * math.sqrt(self.embedding_dim)
-        src = self.encoder(src)
+        # src = self.encoder.vectors[src] * math.sqrt(self.embedding_dim)
+        src = self.encoder.vectors[src]
+        # 应用位置编码
         src = self.pos_encoder(src)
 
         # Pass through the encoder layers
@@ -100,6 +107,6 @@ class TransformerEncoder(torch.nn.Module):
         output = output.transpose(0, 1)
 
         # Classification Head:128,config.SEQUENCE_LENGTH,100 * 100,6
-        # relu = torch.nn.ReLU()
         output = self.classifier(output)
-        return output  # Convert back to [batch_size, seq_len, embedding_dim]
+        # Convert back to [batch_size, seq_len, embedding_dim]
+        return output
