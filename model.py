@@ -5,3 +5,123 @@
     - 输出层：5分类
   - 模型保存
 """
+import torch
+
+
+class SentimentAnalysisModel(torch.nn.Module):
+    """情绪分析模型：GRU+全连接
+
+    Args:
+        input_size: 输入层通道数
+        sequence_length: 序列长度
+        hidden_size: 隐藏层通道数
+        num_layers: 网络层数
+        output_size: 输出分类数
+
+    """
+
+    def __init__(self, model_type=None, sequence_length=100, input_size=100, hidden_size=1024, num_layers=1,
+                 output_size=6,
+                 dropout_probs=0.4):
+        super().__init__()
+        if model_type is None:
+            return
+
+        self.model_type = model_type
+        self.sequence_length = sequence_length
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.output_size = output_size
+        self.dropout_probs = dropout_probs
+
+        # 模型类型：GRU、LSTM、...
+        if self.model_type == 'GRU':
+            self.h0 = torch.zeros(self.num_layers, self.sequence_length, self.hidden_size)
+            self.gru = torch.nn.GRU(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers)
+        elif self.model_type == 'LSTM':
+            self.h0 = torch.zeros(self.num_layers, self.sequence_length, self.hidden_size)
+            self.c0 = torch.zeros(self.num_layers, self.sequence_length, self.hidden_size)
+            self.lstm = torch.nn.LSTM(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers)
+        elif self.model_type == '*':
+            pass
+
+        self.dropout = torch.nn.Dropout(dropout_probs)
+        self.out_linear = torch.nn.Sequential(
+            torch.nn.Linear(sequence_length * hidden_size, hidden_size),
+            torch.nn.ReLU(),
+            torch.nn.Linear(hidden_size, output_size)
+        )
+        # 初始化
+        for param in self.parameters():
+            if param.dim() > 1:
+                torch.nn.init.xavier_uniform_(param)
+
+    def forward(self, x):
+        if self.model_type == 'GRU':
+            out, hn = self.gru(x, self.h0)
+        elif self.model_type == 'LSTM':
+            out, (hn, cn) = self.lstm(x, (self.h0, self.c0))
+        elif self.model_type == '*':
+            pass
+        out = self.dropout(out)
+        return torch.stack([self.out_linear(out[i].view(-1)) for i in range(out.shape[0])])
+
+    def to(self, device):
+        super().to(device)
+        if self.model_type == 'GRU':
+            self.h0 = self.h0.to(device)
+            self.gru = self.gru.to(device)
+        elif self.model_type == 'LSTM':
+            self.c0 = self.c0.to(device)
+            self.h0 = self.h0.to(device)
+            self.lstm = self.lstm.to(device)
+        elif self.model_type == '*':
+            pass
+
+        self.out_linear = self.out_linear.to(device)
+        return self
+
+    def save(self, filename):
+        model_state_dict = {
+            'model_type': self.model_type,
+            'sequence_length': self.sequence_length,
+            'input_size': self.input_size,
+            'hidden_size': self.hidden_size,
+            'num_layers': self.num_layers,
+            'output_size': self.output_size,
+            'dropout_probs': self.dropout_probs,
+            'h0': self.h0,
+            'dropout': self.dropout,
+            'out_linear': self.out_linear,
+            'model_state_dict': self.state_dict(),
+        }
+        if self.model_type == 'GRU':
+            model_state_dict['gru'] = self.gru
+        elif self.model_type == 'LSTM':
+            model_state_dict['lstm'] = self.lstm    
+        torch.save(model_state_dict, filename)
+
+    @classmethod
+    def load(self, filename):
+        checkpoint = torch.load(filename)
+        model_type = checkpoint['model_type']
+        sequence_length = checkpoint['sequence_length']
+        input_size = checkpoint['input_size']
+        hidden_size = checkpoint['hidden_size']
+        num_layers = checkpoint['num_layers']
+        output_size = checkpoint['output_size']
+        dropout_probs = checkpoint['dropout_probs']
+        model = self(model_type=model_type, sequence_length=sequence_length, input_size=input_size,
+                     hidden_size=hidden_size, num_layers=num_layers, output_size=output_size,
+                     dropout_probs=dropout_probs)
+        model.h0 = checkpoint['h0']
+        if model_type == 'GRU':
+            model.gru = checkpoint['gru']
+        elif model_type == 'LSTM':
+            model.lstm = checkpoint['lstm']
+        model.dropout = checkpoint['dropout']
+        model.out_linear = checkpoint['out_linear']
+        model.load_state_dict(checkpoint['model_state_dict'])
+        model.eval()
+        return model
