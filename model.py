@@ -9,8 +9,8 @@ import os
 
 import torch
 
+from net.attention_bi_lstm import AttentionBiLSTM
 from net.GRU import TorchGRU
-from net.LSTM import TorchLSTM
 from net.transformer import TransformerEncoder
 
 
@@ -19,7 +19,6 @@ class SentimentAnalysisModel(torch.nn.Module):
                  sequence_length=100,
                  embedding_dim=100,
                  hidden_size=1024,
-                 num_layers=1,
                  num_classes=5,
                  dropout_probs=0.,
                  embedding=None, ):
@@ -30,7 +29,6 @@ class SentimentAnalysisModel(torch.nn.Module):
         :param sequence_length:
         :param embedding_dim:
         :param hidden_size:
-        :param num_layers:
         :param num_classes:
         :param dropout_probs:
         :param embedding:
@@ -45,12 +43,12 @@ class SentimentAnalysisModel(torch.nn.Module):
         # 模型类型：GRU、LSTM、Transformer、
         if self.model_type == 'GRU':
             self.net = TorchGRU(sequence_length=sequence_length, embedding_dim=embedding_dim,
-                                hidden_size=hidden_size, num_layers=num_layers, num_classes=num_classes,
+                                hidden_size=hidden_size, num_layers=1, num_classes=num_classes,
                                 dropout_probs=dropout_probs, embedding=embedding)
-        elif self.model_type == 'LSTM':
-            self.net = TorchLSTM(sequence_length=sequence_length, embedding_dim=embedding_dim,
-                                 hidden_size=hidden_size, num_layers=num_layers, num_classes=num_classes,
-                                 dropout_probs=dropout_probs, embedding=embedding)
+        elif self.model_type == 'ABL':
+            self.net = AttentionBiLSTM(sequence_length=sequence_length, embedding_dim=embedding_dim,
+                                       hidden_size=hidden_size, num_layers=2, num_classes=num_classes,
+                                       dropout_probs=dropout_probs, embedding=embedding)
         elif self.model_type == 'Transformer':
             self.net = TransformerEncoder(embedding_dim=embedding_dim, dim_feedforward=hidden_size,
                                           nlayers=6, num_heads=4, num_classes=num_classes, dropout_probs=dropout_probs,

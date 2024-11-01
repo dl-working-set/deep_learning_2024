@@ -1,6 +1,6 @@
 # 配置文件
 model:
-  type: Transformer  # 模型类型：GRU、LSTM、Transformer
+  type: Transformer  # 模型类型：GRU、ABL、Transformer
   hidden_size: 512 # 模型隐藏层大小
   dropout_probs: 0.4 # 模型Dropout比例，取值 (0, 1)
   activation: ReLU # TODO 模型激活函数

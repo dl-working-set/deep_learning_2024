@@ -37,7 +37,7 @@ train_loader = train_dataset.construct_dataloader(config.training_batch_size)
 # 6. 创建模型
 model = model.SentimentAnalysisModel(model_type=config.model_type, sequence_length=config.model_sequence_length,
                                      embedding_dim=config.model_embedding_dim,
-                                     hidden_size=config.model_hidden_size, num_layers=1,
+                                     hidden_size=config.model_hidden_size,
                                      num_classes=config.model_num_classes,
                                      dropout_probs=config.model_dropout_probs,
                                      embedding=word_embedding).to(config.device)
