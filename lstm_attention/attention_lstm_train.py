@@ -1,15 +1,6 @@
 # !usr/bin/env python
 # -*- coding:utf-8 -*-
 
-"""
-@Author: HsuDan
-@Date: 2022-02-18 19:12:58
-@Version: 1.0
-@LastEditors: HsuDan
-@LastEditTime: 2022-02-25 11:18:32
-@Description: main
-@FilePath: /Sentiment-Analysis-Chinese-pytorch/Sentiment_Analysis_main.py
-"""
 from __future__ import unicode_literals, print_function, division
 from io import open
 import torch
