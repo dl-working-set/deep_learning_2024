@@ -5,14 +5,14 @@ model:
   dropout_probs: 0.4 # 模型Dropout比例，取值 (0, 1)
   activation: ReLU # TODO 模型激活函数
   embedding_dim: 100  # 词向量维度
-  sequence_length: 30  # 序列长度
+  sequence_length: 40  # 序列长度
   num_classes: 5  # 分类数
 
 training:
   batch_size: 256  # 训练批次大小
   epochs: 50  # 训练轮次
   learning_rate: 0.001  # 学习率
-  lr_scheduler_factor: 0.8  # 学习率衰减因子
+  lr_scheduler_factor: 0.5  # 学习率衰减因子
 
 path:
   stopwords: # 停用词路径

@@ -128,3 +128,5 @@ if not os.path.exists('pt'):
 
 config = Config(config_data)
 __all__ = ['config']
+
+logging.basicConfig(level=logging.INFO)

@@ -82,7 +82,7 @@ def load_stopwords(stopwords_path=[]):
                         break
                     stopwords.append(line.strip('\n'))
     except FileNotFoundError:
-        logging.Error(f"File[{absolute_path}] not found.")
+        logging.error(f"File[{absolute_path}] not found.")
     return stopwords
 
 
@@ -104,8 +104,8 @@ def load_contents_labels(filename):
                     contents.append(content)
                     emotions.append(emotion)
     except FileNotFoundError:
-        logging.Error(f"File[{absolute_path}] not found.")
-    logging.info(f'{len(contents)} comments loaded.')
+        logging.error(f"File[{absolute_path}] not found.")
+    logging.info(f'[{filename}] - {len(contents)} comments loaded.')
     return contents, emotions
 
 
