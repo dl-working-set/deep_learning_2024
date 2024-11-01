@@ -12,6 +12,7 @@
 - data/: 数据集和停用词表
 - model/: 模型文件
 - attention_png: 注意力机制可视化图片
+- word2vec: 词向量相关文件
 
 ## 运行过程
 python 3.10+
