@@ -1,15 +1,6 @@
 # !usr/bin/env python
 # -*- coding:utf-8 -*-
 
-"""
-@Author: HsuDan
-@Date: 2022-02-18 19:12:58
-@Version: 1.0
-@LastEditors: HsuDan
-@LastEditTime: 2022-02-25 11:18:01
-@Description: DataProcess
-@FilePath: /Sentiment-Analysis-Chinese-pytorch/Sentiment_Analysis_DataProcess.py
-"""
 
 from __future__ import unicode_literals, print_function, division
 
@@ -29,8 +20,7 @@ label_map = {
     "满意": 1,
     "中立": 2,
     "不满意": 3,
-    "非常不满意": 4,
-    "无效评论": 5,
+    "非常不满意": 4
 }
 
 
