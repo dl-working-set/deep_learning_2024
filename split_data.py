@@ -1,11 +1,14 @@
 """
 统计训练数据中各个标签的数量
 """
+import random
 import json
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from collections import Counter
-from config import TRAIN_DATA_PATH, VALIDATION_DATA_PATH, TEST_DATA_PATH, RAW_DATA_PATH
+from init import config
+
+TRAIN_DATA_PATH, VALIDATION_DATA_PATH, TEST_DATA_PATH, RAW_DATA_PATH = config.train_data_path, config.validation_data_path, config.test_data_path, config.raw_data_path
 
 # 设置 matplotlib 中文显示
 
@@ -47,6 +50,11 @@ for prediction in prediction_types:
 print(f"训练数据中各个标签的数量为：{Counter([data['prediction'] for data in train_data])}")
 print(f"验证数据中各个标签的数量为：{Counter([data['prediction'] for data in validation_data])}")
 print(f"测试数据中各个标签的数量为：{Counter([data['prediction'] for data in test_data])}")
+
+# 打乱数据
+random.shuffle(train_data)
+random.shuffle(validation_data)
+random.shuffle(test_data)
 
 # 使用 plt 绘制各个数据集中各个标签的数量
 # 绘制 训练数据中各个标签的数量, train_data, 绘制为饼图
