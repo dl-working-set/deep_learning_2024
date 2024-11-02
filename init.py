@@ -123,7 +123,9 @@ with open(config_path, 'r') as stream:
         logging.error(f'Error loading config.yaml - {exc}')
         exit(1)
 
-if not os.path.exists('pt'):
+path = os.path.dirname(__file__)
+absolute_path = os.path.join(path, 'pt')
+if not os.path.exists(absolute_path):
     os.makedirs('pt')
 
 config = Config(config_data)

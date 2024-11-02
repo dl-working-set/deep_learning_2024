@@ -9,8 +9,9 @@ import os
 
 import torch
 
-from net.attention_bi_lstm import AttentionBiLSTM
 from net.GRU import TorchGRU
+from net.attention_bi_lstm import AttentionBiLSTM
+from net.textCNN import TextCNN
 from net.transformer import TransformerEncoder
 
 
@@ -40,16 +41,20 @@ class SentimentAnalysisModel(torch.nn.Module):
         self.model_type = model_type
         self.net = None  # 具体网络实现 ⬇️
 
-        # 模型类型：GRU、LSTM、Transformer、
+        # 模型类型：textCNN、GRU、attention_bi_lstm、transformer
+        if self.model_type == 'textCNN':
+            self.net = TextCNN(embedding_dim=embedding_dim, hidden_size=hidden_size, num_classes=num_classes,
+                               dropout_probs=dropout_probs, embedding=embedding, kernel_sizes=[3, 4, 5],
+                               num_channels=100)
         if self.model_type == 'GRU':
             self.net = TorchGRU(sequence_length=sequence_length, embedding_dim=embedding_dim,
                                 hidden_size=hidden_size, num_layers=1, num_classes=num_classes,
                                 dropout_probs=dropout_probs, embedding=embedding)
-        elif self.model_type == 'ABL':
+        elif self.model_type == 'attention_bi_lstm':
             self.net = AttentionBiLSTM(sequence_length=sequence_length, embedding_dim=embedding_dim,
                                        hidden_size=hidden_size, num_layers=2, num_classes=num_classes,
                                        dropout_probs=dropout_probs, embedding=embedding)
-        elif self.model_type == 'Transformer':
+        elif self.model_type == 'transformer':
             self.net = TransformerEncoder(embedding_dim=embedding_dim, dim_feedforward=hidden_size,
                                           nlayers=6, num_heads=4, num_classes=num_classes, dropout_probs=dropout_probs,
                                           embedding=embedding)
