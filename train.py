@@ -57,7 +57,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr=config.training_learning_rat
 lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min',
                                                           factor=config.training_lr_scheduler_factor,
                                                           patience=5)
-early_stopping = run.EarlyStopping(patience=5)
+early_stopping = run.EarlyStopping(patience=10, verbose=config.train_early_stopping_verbose)
 
 for epoch in range(1, config.training_epochs + 1):
     train_loss = run.train(model, train_loader, loss_fn, optimizer, config.device)

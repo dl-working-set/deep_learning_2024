@@ -13,6 +13,7 @@ training:
   epochs: 50  # 训练轮次
   learning_rate: 0.001  # 学习率
   lr_scheduler_factor: 0.5  # 学习率衰减因子
+  early_stopping_verbose: True  # 是否打印early stopping信息
 
 path:
   stopwords: # 停用词路径

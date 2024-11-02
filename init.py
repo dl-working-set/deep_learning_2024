@@ -74,6 +74,10 @@ class Config:
         return self.training.get('lr_scheduler_factor')
 
     @property
+    def train_early_stopping_verbose(self):
+        return self.training.get('early_stopping_verbose')
+
+    @property
     def stopwords_path(self):
         return self.path.get('stopwords', [])
 
