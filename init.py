@@ -126,7 +126,7 @@ with open(config_path, 'r') as stream:
 path = os.path.dirname(__file__)
 absolute_path = os.path.join(path, 'pt')
 if not os.path.exists(absolute_path):
-    os.makedirs('pt')
+    os.makedirs(absolute_path)
 
 config = Config(config_data)
 __all__ = ['config']
