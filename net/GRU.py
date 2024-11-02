@@ -17,7 +17,9 @@ class TorchGRU(torch.nn.Module):
         :param embedding:
         """
         super().__init__()
-        self.embedding = embedding
+        self.embedding = torch.nn.Embedding.from_pretrained(embedding.vectors)
+        self.embedding.weight.requires_grad = True
+
         self.sequence_length = sequence_length
         self.hidden_size = hidden_size
         self.num_layers = num_layers
@@ -34,7 +36,7 @@ class TorchGRU(torch.nn.Module):
                 torch.nn.init.xavier_uniform_(param)
 
     def forward(self, x):
-        x = self.embedding.vectors[x]
+        x = self.embedding(x)
         h0 = torch.zeros(self.num_layers, self.sequence_length, self.hidden_size).to(x.device)
         out, hn = self.gru(x, h0)
         out = self.dropout(out)

@@ -92,8 +92,11 @@ class TransformerEncoder(torch.nn.Module):
         # self.pos_encoder = PositionalEncoding(embedding_dim=embedding_dim, max_len=num_embeddings)
         self.pos_encoder = PositionalEncoding(embedding_dim=embedding_dim)
         # 使用预训练gensim.word2vec 代替 torch.nn.Embedding
-        # self.encoder = torch.nn.Embedding(num_embeddings=num_embeddings, embedding_dim=embedding_dim)
-        self.encoder = embedding
+        self.embedding = torch.nn.Embedding.from_pretrained(embedding.vectors)
+        self.embedding.weight.requires_grad = True
+
+        self.key_to_index = embedding.key_to_index
+        self.embedding.weight.requires_grad = True
         self.layers = torch.nn.ModuleList(
             [TransformerEncoderLayer(embedding_dim, num_heads, dim_feedforward, dropout_probs) for _ in range(nlayers)])
         self.embedding_dim = embedding_dim
@@ -109,11 +112,11 @@ class TransformerEncoder(torch.nn.Module):
 
         # src_key_padding_mask = (src == 0)
         # 使用 <PAD> 标记mask
-        src_key_padding_mask = (src == self.encoder.key_to_index[config.padding_word])  # shape: [batch_size, seq_len]
+        src_key_padding_mask = (src == self.key_to_index[config.padding_word])  # shape: [batch_size, seq_len]
 
         # Embedding and Positional Encoding
         # src = self.encoder.vectors[src] * math.sqrt(self.embedding_dim)
-        src = self.encoder.vectors[src]  # shape: [batch_size, seq_len, embedding_dim]
+        src = self.embedding(src)  # shape: [batch_size, seq_len, embedding_dim]
         # 应用位置编码
         src = self.pos_encoder(src)  # shape: [batch_size, seq_len, embedding_dim]
 

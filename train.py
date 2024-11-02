@@ -41,13 +41,13 @@ model = model.SentimentAnalysisModel(model_type=config.model_type, sequence_leng
                                      num_classes=config.model_num_classes,
                                      dropout_probs=config.model_dropout_probs,
                                      embedding=word_embedding).to(config.device)
-# 6. 加载验证集数据
+# 7. 加载验证集数据
 validation_contents, validation_emotions = dataset.load_contents_labels(config.validation_data_path)
 
-# 7. 分词、标签化
+# 8. 分词、标签化
 validation_tokens = dataset.tokenization(validation_contents, stopwords)
 
-# 7. 构建验证集
+# 9. 构建验证集
 validation_dataset = dataset.SentimentAnalysisDataset(tokens=validation_tokens, emotions=validation_emotions,
                                                       sequence_length=config.model_sequence_length,
                                                       key_to_index=word_embedding.key_to_index, ).dataset
@@ -57,13 +57,15 @@ optimizer = torch.optim.Adam(model.parameters(), lr=config.training_learning_rat
 lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min',
                                                           factor=config.training_lr_scheduler_factor,
                                                           patience=5)
+early_stopping = run.EarlyStopping(patience=5)
+
 for epoch in range(1, config.training_epochs + 1):
     train_loss = run.train(model, train_loader, loss_fn, optimizer, config.device)
     validation_loss, validation_macro_precision, validation_macro_recall, validation_macro_f1 = run.test(model,
                                                                                                          validation_dataset,
                                                                                                          loss_fn,
                                                                                                          config.device)
-    lr_scheduler.step(validation_loss)
+
     print('epoch[{:d}]'.format(epoch),
           'train_loss[{:f}]'.format(train_loss),
           'validation_loss[{:f}]'.format(validation_loss),
@@ -72,6 +74,12 @@ for epoch in range(1, config.training_epochs + 1):
           'validation_macro_f1[{:f}]'.format(validation_macro_f1),
           'optimizer_lr[{:.2e}]'.format(optimizer.param_groups[0]['lr']),
           time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
+
+    # early stopping
+    if early_stopping(validation_loss, model):
+        break
+    # 学习率更新
+    lr_scheduler.step(validation_loss)
 
 # 3. 模型保存
 word_embedding.save(filename=config.embedding_pt_path)
