@@ -113,6 +113,36 @@ class Config:
     def padding_word(self):
         return '<PAD>'
 
+    def __str__(self):
+        # 获取所有属性
+        attributes = [
+            ('model_type', self.model_type),
+            ('model_hidden_size', self.model_hidden_size),
+            ('model_dropout_probs', self.model_dropout_probs),
+            ('model_activation', self.model_activation),
+            ('model_embedding_dim', self.model_embedding_dim),
+            ('model_sequence_length', self.model_sequence_length),
+            ('model_num_classes', self.model_num_classes),
+            ('training_batch_size', self.training_batch_size),
+            ('training_epochs', self.training_epochs),
+            ('training_learning_rate', self.training_learning_rate),
+            ('training_lr_scheduler_factor', self.training_lr_scheduler_factor),
+            ('train_early_stopping_verbose', self.train_early_stopping_verbose),
+            ('stopwords_path', self.stopwords_path),
+            ('raw_data_path', self.raw_data_path),
+            ('train_data_path', self.train_data_path),
+            ('validation_data_path', self.validation_data_path),
+            ('test_data_path', self.test_data_path),
+            ('model_pt_path', self.model_pt_path),
+            ('embedding_pt_path', self.embedding_pt_path),
+            ('device', self.device),
+            ('padding_word', self.padding_word)
+        ]
+
+        # 格式化属性为字符串
+        attr_str = '\n'.join(f"{attr}: {value}" for attr, value in attributes)
+        return f"Config:\n{attr_str}"
+
 
 # 获取当前文件的绝对路径
 path = os.path.dirname(__file__)
@@ -127,12 +157,26 @@ with open(config_path, 'r') as stream:
         logging.error(f'Error loading config.yaml - {exc}')
         exit(1)
 
-path = os.path.dirname(__file__)
-absolute_path = os.path.join(path, 'pt')
-if not os.path.exists(absolute_path):
-    os.makedirs(absolute_path)
-
 config = Config(config_data)
 __all__ = ['config']
+print(config)
 
-logging.basicConfig(level=logging.INFO)
+path = os.path.dirname(__file__)
+pt_absolute_path = os.path.join(path, 'pt')
+if not os.path.exists(pt_absolute_path):
+    os.makedirs(pt_absolute_path)
+
+log_absolute_path = os.path.join(path, 'log')
+if not os.path.exists(log_absolute_path):
+    os.makedirs(log_absolute_path)
+logging.basicConfig(filename=log_absolute_path + 'training.log', level=logging.INFO, format='%(asctime)s %(message)s')
+
+
+def clear_cuda_cache():
+    """清空CUDA缓存"""
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+        logging.info("CUDA cache cleared.")
+
+
+clear_cuda_cache()

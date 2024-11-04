@@ -41,9 +41,9 @@ class AttentionBiLSTM(torch.nn.Module):
         )
 
         # 初始化
-        for param in self.parameters():
-            if param.dim() > 1:
-                torch.nn.init.xavier_uniform_(param)
+        # for param in self.parameters():
+        #     if param.dim() > 1:
+        #         torch.nn.init.xavier_uniform_(param)
 
     def forward(self, x):
         embeddings = self.embedding(x)
