@@ -169,7 +169,7 @@ if not os.path.exists(pt_absolute_path):
 log_absolute_path = os.path.join(path, 'log')
 if not os.path.exists(log_absolute_path):
     os.makedirs(log_absolute_path)
-logging.basicConfig(filename=log_absolute_path + 'training.log', level=logging.INFO, format='%(asctime)s %(message)s')
+logging.basicConfig(filename=log_absolute_path + '/training.log', level=logging.INFO, format='%(asctime)s %(message)s')
 
 
 def clear_cuda_cache():
