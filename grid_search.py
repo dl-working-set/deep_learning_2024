@@ -146,7 +146,7 @@ estimator = SentimentAnalysisEstimator()
 
 # 网格搜索
 grid_search = GridSearchCV(estimator=estimator, param_grid=param_grid, scoring=make_scorer(f1_score, average='macro'),
-                           cv=3, n_jobs=2, refit=True, verbose=2)
+                           cv=3, n_jobs=1, refit=True, verbose=2)
 grid_search.fit(X=train_contents, y=train_emotions, X_val=validation_contents, y_val=validation_emotions)
 
 # 输出最佳参数和最佳得分
