@@ -60,7 +60,7 @@ class SentimentAnalysisModel(torch.nn.Module):
                                           embedding=embedding)
         elif self.model_type == '*':
             pass
-        self.apply(init_weights)
+        # self.apply(init_weights)
 
     def forward(self, x):
         return self.net(x)
@@ -93,6 +93,7 @@ class SentimentAnalysisModel(torch.nn.Module):
 
 
 def init_weights(m):
+    print(m)
     if isinstance(m, torch.nn.Linear):
         torch.nn.init.kaiming_uniform_(m.weight.data)
         if m.bias is not None:

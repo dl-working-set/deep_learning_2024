@@ -31,9 +31,9 @@ class TorchGRU(torch.nn.Module):
             torch.nn.Linear(hidden_size, num_classes)
         )
         # 初始化
-        # for param in self.parameters():
-        #     if param.dim() > 1:
-        #         torch.nn.init.xavier_uniform_(param)
+        for param in self.parameters():
+            if param.dim() > 1:
+                torch.nn.init.xavier_uniform_(param)
 
     def forward(self, x):
         x = self.embedding(x)

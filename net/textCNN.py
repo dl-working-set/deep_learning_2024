@@ -28,6 +28,11 @@ class TextCNN(torch.nn.Module):
         self.dropout = torch.nn.Dropout(dropout_probs)
         self.classification = torch.nn.Linear(len(kernel_sizes) * num_channels, num_classes)  # shape: [300, 5]
 
+        # 初始化
+        for param in self.parameters():
+            if param.dim() > 1:
+                torch.nn.init.xavier_uniform_(param)
+
     def forward(self, x):
         # (batch_size, seq_len, embed_dim)
         x = self.embedding(x)
